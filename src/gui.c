@@ -1,10 +1,10 @@
 /* Embroidermodder 2.
  * ------------------------------------------------------------
- * Copyright 2021 The Embroidermodder Team
+ * Copyright 2021-2022 The Embroidermodder Team
  * Embroidermodder 2 is Open Source Software.
- * See LICENSE.txt for licensing terms.
+ * See LICENCE for licensing terms.
  * ------------------------------------------------------------
- * This file is for the functions, not the data, of embroidermodder 2.
+ * This file is for the functions, not the data, of Embroidermodder 2.
  */
 
 #include <stdio.h>
@@ -22,7 +22,6 @@
 #endif
 
 #include "GL/freeglut.h"
-#include "cJSON.h"
 
 #include "embroidermodder.h"
 
@@ -38,57 +37,79 @@ char *folders[] = {
     "samples",
     "translations"
 };
+
+settings_wrapper settings, preview, dialog, accept_;
+
 int interaction_mode = 0;
 int run = 1;
-int window_width = 640;
-int window_height = 480;
 float mouse[2];
 int mouse_x = 0;
 int mouse_y = 0;
 
+void build_right_click_menu(void);
+void build_toolbar_menu(void);
+void build_menubar_menu(void);
+
 /* FUNCTIONS SECTION */
 
-int main_tex_example(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
-    int window;
-    int rightclick_menu;
-    int file_menu, edit_menu, settings_menu, window_menu, help_menu;
-    int i, ntextures;
+    int window, rightclick_menu, menu_ids[10], i, j;
     puts("SDL2 version of Embroidermodder");
+    
+    settings.window_width = 640;
+    settings.window_height = 480;
+    settings.window_x = 100;
+    settings.window_y = 100;
+    settings.window_aspect = 640.0/480.0;
     
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    glutInitWindowSize(window_width, window_height);
-    glutInitWindowPosition(100,100);
-    window = glutCreateWindow("Embroidermodder 2 (SDL)");
+    glutInitWindowSize(settings.window_width, settings.window_height);
+    glutInitWindowPosition(settings.window_x, settings.window_y);
+    window = glutCreateWindow("Embroidermodder 2");
     glClearColor (0.5, 0.5, 0.5, 0.0);
-    
-    file_menu = glutCreateMenu(menu);
-    glutAddMenuEntry("New", ACTION_new);
-    glutAddMenuEntry("Open", ACTION_open);
-    glutAddMenuEntry("Save", ACTION_save);
-    glutAddMenuEntry("Save as", ACTION_saveas);
-    glutAddMenuEntry("Exit", ACTION_exit);
-    edit_menu = glutCreateMenu(menu);
-    glutAddMenuEntry("Undo", ACTION_undo);
-    settings_menu = glutCreateMenu(menu);
-    glutAddMenuEntry("Undo", ACTION_undo);
-    window_menu = glutCreateMenu(menu);
-    glutAddMenuEntry("Undo", ACTION_undo);
-    help_menu = glutCreateMenu(menu);
-    glutAddMenuEntry("Undo", ACTION_undo);
-    rightclick_menu = glutCreateMenu(menu);
-    glutAddSubMenu("File", file_menu);
-    glutAddSubMenu("Edit", edit_menu);
-    glutAddSubMenu("Settings", settings_menu);
-    glutAddSubMenu("Window", window_menu);
-    glutAddSubMenu("Help", help_menu);
-    glutAttachMenu(GLUT_RIGHT_BUTTON);
 
+    build_right_click_menu();
+    build_toolbar_menu();
+    build_menubar_menu();
+
+    glutDisplayFunc(display);
+    glutKeyboardFunc(key_handler);
+    glutMainLoop();
+    return 0;
+}
+
+void build_right_click_menu(void)
+{
+    int i, j, menu_ids[10];
+    for (j=0; j<n_menus; j++) {
+        menu_ids[j] = glutCreateMenu(menu);
+        for (i=0; menus[j][i] > -2; i++) {
+            int act = menus[j][i];
+            if (act>=0) {
+                glutAddMenuEntry(action_list[act].menu_name, action_list[act].id);
+            }
+        }
+    }
+    rightclick_menu = glutCreateMenu(menu);
+    for (j=0; j<n_menus; j++) {
+        glutAddSubMenu(menu_label[j], menu_ids[j]);
+    }
+    glutAttachMenu(GLUT_RIGHT_BUTTON);
+}
+
+void build_toolbar_menu(void)
+{
+
+}
+
+void build_menubar_menu(void)
+{
+    int i;
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    ntextures = 2;
     glGenTextures(N_TEXTURES, texture);
     for (i=0; i<N_TEXTURES; i++) {
         generate_texture(i);
@@ -96,10 +117,6 @@ int main_tex_example(int argc, char *argv[])
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
     glEnable(GL_TEXTURE_2D);
     glShadeModel(GL_FLAT);
-    glutDisplayFunc(display);
-    glutKeyboardFunc(key_handler);
-    glutMainLoop();
-    return 0;
 }
 
 double sgn(double x)
@@ -200,72 +217,10 @@ int file_exists(char *fname)
     return !stat(fname, &stats);
 }
 
-int loadJSON(char *fname)
-{
-    if (file_exists(fname)) {
-        /* Config has been written, load to settings. */
-        parseJSON(fname);
-    }
-    else {
-        /* We load from the defaults instead. */
-    }
-    return 0;
-}
-
-int saveJSON(char *fname)
-{
-    /* Write all current values of settings to JSON file. */
-    return 0;
-}
-
-int parseJSON(char *fname)
-{
-    FILE *f;
-    char str[1000];
-    cJSON *obj, *name, *value;
-    int length;
-
-    puts("Embroidermodder sandbox.");
-
-    f = fopen(fname, "rb");
-    fseek(f, 0, SEEK_END);
-    length = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    fread(str, 1, length, f);
-    fclose(f);
-
-    obj = cJSON_Parse(str);
-    if (!obj) {
-        puts("Failed to parse JSON string.");
-        const char *error = cJSON_GetErrorPtr();
-        printf("%s\n", error);
-        return 1;
-    }
-    name = cJSON_GetObjectItemCaseSensitive(obj, "File");
-    if (!name) {
-        printf("Failed find key File.");
-        return 0;
-    }
-    printf("name: %d\n", name->type);
-    value = cJSON_GetObjectItemCaseSensitive(name, "type");
-    if (!value) {
-        printf("Failed find key type within dict File.");
-        return 0;
-    }
-    printf("name: %d\n", value->type);
-
-    if (cJSON_IsString(value) && value->valuestring) {
-        printf("%s\n", value->valuestring);
-    }
-
-    cJSON_Delete(obj);
-    return 0;
-}
-
 void render_quadlist(quad *qlist)
 {
     int i;
-    glViewport(0, 0, window_width, window_height);
+    glViewport(0, 0, settings.window_width, settings.window_height);
     glClearColor(1.0, 1.0, 1.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -319,25 +274,23 @@ void key_handler(int key, int x, int y)
     }
 }
 
+#include "icons/new.c"
+
 void generate_texture(int i)
 {
-    unsigned char data[128*128*3];
-    int j;
-    for (j=0; j<128*128; j++) {
-        data[3*j] = j%256;
-        data[3*j+1] = j%256;
-        data[3*j+2] = j%256;
-    }
+    int icon_size = 16;
     tex[i].width = 128;
     tex[i].height = 128;
-    tex[i].corners[0] = 0.0;
-    tex[i].corners[1] = 0.0;
-    tex[i].corners[2] = 0.0;
-    tex[i].corners[3] = 1.0;
-    tex[i].corners[4] = 1.0;
-    tex[i].corners[5] = 1.0;
-    tex[i].corners[6] = 1.0;
-    tex[i].corners[7] = 0.0;
+    float h = icon_size/(0.5*settings.window_height);
+    float w = icon_size/(0.5*settings.window_width); 
+    tex[i].corners[0] = -1.0+w*(i-1);
+    tex[i].corners[1] = 1.0;
+    tex[i].corners[2] = -1.0+w*(i-1);
+    tex[i].corners[3] = 1.0-h;
+    tex[i].corners[4] = -1.0+w*i;
+    tex[i].corners[5] = 1.0-h;
+    tex[i].corners[6] = -1.0+w*i;
+    tex[i].corners[7] = 1.0;
     tex[i].position[0] = 0.0;
     tex[i].position[1] = 0.0;
     tex[i].position[2] = 0.0;
@@ -350,7 +303,7 @@ void generate_texture(int i)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexImage2D(GL_TEXTURE_2D, 0, 3, tex[i].width, tex[i].height, 0,
-        GL_RGB, GL_UNSIGNED_BYTE, data);
+        GL_RGB, GL_UNSIGNED_BYTE, icon_new);
 }
 
 

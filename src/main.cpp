@@ -8,7 +8,6 @@
 
 #include "embroidermodder.h"
 
-settings_wrapper settings, preview, dialog, accept_;
 QStringList opensave_recent_list_of_files;
 QString opensave_custom_filter;
 
@@ -9882,40 +9881,6 @@ void MainWindow::actions()
     }
 }
 
-void main_undo(void)
-{
-    debug_message("undo()");
-    if (undo_history_position > 0) {
-        action_call last = undo_history[undo_history_position];
-        undo_history_position--;
-        printf("undo_history_position = %d\n", undo_history_position);
-        printf("undo_history_length = %d\n", undo_history_length);
-        
-        /* Create the reverse action from the last action and apply with
-         * the main actuator.
-         */
-        switch (last.id) {
-        case ACTION_donothing:
-        default:
-            debug_message("The last action has no undo candidate.");
-            break;
-        }
-        actuator();
-    }
-}
-
-void main_redo(void)
-{
-    debug_message("redo()");
-    if (undo_history_position < undo_history_length) {
-        undo_history_position++;
-        printf("undo_history_position = %d\n", undo_history_position);
-        printf("undo_history_length = %d\n", undo_history_length);
-        memcpy(&action, undo_history+undo_history_position, sizeof(action_call));
-        actuator();
-    }
-}
-
 bool MainWindow::isShiftPressed()
 {
     return settings.shiftKeyPressedState;
@@ -10225,12 +10190,6 @@ void nightVision(void)
         gview->setCrossHairColor(qRgb(255,255,255)); //TODO: Make night vision color settings.
         gview->setGridColor(qRgb(255,255,255));      //TODO: Make night vision color settings.
     }
-}
-
-void doNothing(void)
-{
-    //This function intentionally does nothing.
-    debug_message("doNothing()");
 }
 
 void MainWindow::layerSelectorIndexChanged(int index)

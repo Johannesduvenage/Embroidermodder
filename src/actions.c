@@ -1,6 +1,6 @@
 /* This file is part of Embroidermodder 2.
  * ------------------------------------------------------------
- * Copyright 2021 The Embroidermodder Team
+ * Copyright 2021-2022 The Embroidermodder Team
  * Embroidermodder 2 is Open Source Software.
  * See LICENSE.txt for licensing terms.
  * ------------------------------------------------------------
@@ -11,11 +11,52 @@
 #include "embroidermodder.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 action_call undo_history[1000];
 action_call action;
 int undo_history_length = 0;
 int undo_history_position = 0;
+
+void doNothing(void)
+{
+    /* This function intentionally does nothing. */
+    debug_message("doNothing()");
+}
+
+void main_undo(void)
+{
+    debug_message("undo()");
+    if (undo_history_position > 0) {
+        action_call last = undo_history[undo_history_position];
+        undo_history_position--;
+        printf("undo_history_position = %d\n", undo_history_position);
+        printf("undo_history_length = %d\n", undo_history_length);
+        
+        /* Create the reverse action from the last action and apply with
+         * the main actuator.
+         */
+        switch (last.id) {
+        case ACTION_donothing:
+        default:
+            debug_message("The last action has no undo candidate.");
+            break;
+        }
+        actuator();
+    }
+}
+
+void main_redo(void)
+{
+    debug_message("redo()");
+    if (undo_history_position < undo_history_length) {
+        undo_history_position++;
+        printf("undo_history_position = %d\n", undo_history_position);
+        printf("undo_history_length = %d\n", undo_history_length);
+        memcpy(&action, undo_history+undo_history_position, sizeof(action_call));
+        actuator();
+    }
+}
 
 void settings_actuator(void)
 {
@@ -32,6 +73,7 @@ void actuator(void)
     case ACTION_donothing:
         doNothing();
         break;
+        /*
     case ACTION_new:
         _mainWin->newFile();
         break;
@@ -182,6 +224,7 @@ void actuator(void)
     case ACTION_textoverline:
         settings.text_style_overline = !settings.text_style_overline;
         break;
+        */
     default:
         debug_message("Unrecognised action index.");
         debug_message("Action has not been implimented.");

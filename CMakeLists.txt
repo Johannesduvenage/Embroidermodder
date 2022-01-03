@@ -186,14 +186,12 @@ ELSE()
 ENDIF()
 
 add_executable(embroidermodder
-	src/main.cpp
-	src/settings.cpp
-	src/actions.cpp
 	src/gui.c
 	src/icons.c
+	src/image.c
+	src/actions.c
 	src/config.c
 	src/embroidermodder.h
-	extern/cJSON/cJSON.c
 	${FREEGLUT_SRCS}
 )
 
@@ -207,7 +205,6 @@ target_include_directories(embroidermodder PUBLIC
 add_subdirectory(libembroidery)
 
 target_link_libraries(embroidermodder
-	Qt5::Widgets
 	GL
 	embroidery_static
 )

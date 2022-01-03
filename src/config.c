@@ -1,8 +1,8 @@
 /* This file is part of Embroidermodder 2.
  * ------------------------------------------------------------
- * Copyright 2021 The Embroidermodder Team
+ * Copyright 2021-2022 The Embroidermodder Team
  * Embroidermodder 2 is Open Source Software.
- * See LICENSE.txt for licensing terms.
+ * See LICENCE for licensing terms.
  * ------------------------------------------------------------
  * This file is only for data and declarations that
  * are compiled into the source.
@@ -169,14 +169,16 @@ int file_menu[] = {
     ACTION_print,
     ACTION_designdetails,
     -1,
-    ACTION_undo,
-    ACTION_redo,
-    -1,
     ACTION_help,
+    -1,
+    ACTION_exit
     -2
 };
 
 int edit_menu[] = {
+    ACTION_undo,
+    ACTION_redo,
+    -1,
     ACTION_cut,
     ACTION_copy,
     ACTION_paste,

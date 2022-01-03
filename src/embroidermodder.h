@@ -334,7 +334,7 @@ TODO: ACTION_quickselect
 #define PATHS_ELLIPSE   4
 #define PATHS_END       5
 
-#define N_TEXTURES      2
+#define N_TEXTURES      10
 
 /*
  * TYPEDEFS
@@ -399,6 +399,7 @@ typedef struct Texture_t {
 typedef struct Settings_wrapper {
     int window_width;
     int window_height;
+    float window_aspect;
     int window_x;
     int window_y;
     int general_icon_size;
@@ -475,14 +476,6 @@ typedef struct Settings_wrapper {
     int text_style_overline;
     int text_style_strikeout;
 
-    int file_toolbar[20];
-    int edit_toolbar[20];
-    int view_toolbar[20];
-    int pan_toolbar[20];
-    int icon_toolbar[20];
-    int help_toolbar[20];
-    int zoom_toolbar[20];
-    char *folders[20];
     quad quad_list1[20];
     quad quad_list2[20];
 
@@ -974,10 +967,13 @@ EmbVector rotate_vector(EmbVector a, float angle);
 EmbVector scale_vector(EmbVector a, float scale);
 EmbVector scale_and_rotate(EmbVector a, float scale, float angle);
 
+void texture_from_xpm(char *xpm_image[], char *texture);
+
 /*
  * C++ Specific code
  * -----------------
  */
+ #if 0
 #ifdef __cplusplus
 }
 
@@ -2480,6 +2476,7 @@ private:
     void init(const QString& str, float x, float y, unsigned int rgb, Qt::PenStyle lineType);
 };
 
+#endif
 #endif
 #endif /* EMBROIDERMODDER_H */
 
